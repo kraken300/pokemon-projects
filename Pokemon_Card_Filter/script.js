@@ -2,6 +2,7 @@ const form = document.querySelector(".searchForm");
 const inputData = document.querySelector("input");
 const cardContainer = document.querySelector(".cardContainer");
 const loader = document.querySelector(".loader");
+const select = document.querySelector("select");
 let resultsUrl;
 let loading = false;
 let storedData = [];
@@ -15,20 +16,17 @@ function debounce(func, delay) {
     };
 }
 
-// Load more data on scroll
-// window.addEventListener("scroll", debounce(() => {
-//     const { scrollHeight, scrollTop, clientHeight } = document.documentElement;
-//     if (scrollTop + clientHeight >= scrollHeight - 100 && !loading) {
-//         getMoreData()
-//     }
-// }, 500));// Adjust delay as necessary
+// form.addEventListener("submit", (e) => {
+//     const pName = inputData.value.toLowerCase();
+//     e.preventDefault();
+//     setLoadingState(false);
+//     filterData(pName);
+// });
 
-form.addEventListener("submit", (e) => {
-    const pName = inputData.value.toLowerCase();
-    e.preventDefault();
-    setLoadingState(false);
-    filterData(pName);
-});
+inputData.addEventListener("keyup", filterData);
+inputData.addEventListener("change", filterData);
+
+select.addEventListener("change", handleSort);
 
 window.addEventListener("DOMContentLoaded", getMoreData);
 
@@ -36,7 +34,7 @@ async function getMoreData() {
     try {
         setLoadingState(true);// Start loading 
         console.log("Fetching data..."); // Log for debugging
-        const url = `https://pokeapi.co/api/v2/pokemon?limit=5&offset=0`;
+        const url = `https://pokeapi.co/api/v2/pokemon?limit=100&offset=0`;
         const data = await getData(url);
 
         const { results } = data;
@@ -92,11 +90,29 @@ function displayData(data) {
     cardContainer.innerHTML += names;
 }
 
-function filterData(name) {
-    const filteredData =  storedData.filter(fData => fData.name === name);
+function filterData() {
+    const filteredData =  storedData.filter(fData => fData.name.match(this.value));
     cardContainer.textContent = "";
     displayData(filteredData);
-    // console.log(filteredData);
+    // console.log(this.value);
+}
+
+function handleSort(){
+    if(this.value === "ascending"){
+        const asc= storedData.sort((a,b)=>a.name.localeCompare(b.name));
+        cardContainer.textContent = "";
+        displayData(asc);
+    }
+
+    else if(this.value === "descending"){
+        const dsc= storedData.sort((a,b)=>b.name.localeCompare(a.name));
+        cardContainer.textContent = "";
+        displayData(dsc);
+    }
+
+    else{
+        return;
+    }
 }
 
 function displayError(error) {
