@@ -8,22 +8,41 @@ let resultsUrl;
 let offsetLimit = 0;
 let loading = false;
 
-// Debounce function to limit the rate of function execution
-function debounce(func, delay) {
-    let timeout;
-    return function (...args) {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => func.apply(this, args), delay);
-    };
-}
+// Throttle function to limit the rate of function execution
+function throttle(cb, delay = 1000) {
+    let shouldWait = false;
+    let waitingArgs;
+    const timeoutFunc = () => {
+        if (waitingArgs == null) {
+            shouldWait = false;
+        }
+        else {
+            cb(...waitingArgs);
+            waitingArgs = null;
+            setTimeout(timeoutFunc, delay);
+        }
+    }
+
+    return (...args) => {
+        if (shouldWait) {
+            waitingArgs = args;
+            return;
+        };
+        cb(...args);
+        shouldWait = true;
+
+        setTimeout(timeoutFunc, delay);
+    }
+};
+
 
 // Load more data on scroll
-window.addEventListener("scroll", debounce(() => {
+window.addEventListener("scroll", throttle(() => {
     const { scrollHeight, scrollTop, clientHeight } = document.documentElement;
     if (scrollTop + clientHeight >= scrollHeight - 100 && !loading) {
         getMoreData()
     }
-}, 500));// Adjust delay as necessary
+}),2000);// Adjust delay as necessary
 
 form.addEventListener("submit", (e) => {
     e.preventDefault();
@@ -39,7 +58,7 @@ async function getMoreData() {
     console.log("Fetching more data..."); // Log for debugging
 
     try {
-        const url = `https://pokeapi.co/api/v2/pokemon?limit=20&offset=${offsetLimit}`;
+        const url = `https://pokeapi.co/api/v2/pokemon?limit=5&offset=${offsetLimit}`;
         const data = await getData(url);
 
         const { results } = data;
@@ -86,14 +105,14 @@ function displayData(data) {
         <div class="card">
             <img src="${singleData.sprites.front_default}" alt="images">
             <h1>${singleData.name.charAt(0).toUpperCase() + singleData.name.slice(1)}</h1>
-            <p><b>Type: </b>${singleData.types.map(type=>type.type.name).join(", ")}</p>
-            <p><b>Move: </b>${singleData.moves.map(move=>move.move.name).slice(0,4).join(", ")}</p>
-            <p><b>Stat: </b>${singleData.stats.map(stat=>`${stat.stat.name}: ${stat.base_stat}`).slice(0,3).join(", ")}</p>
+            <p><b>Type: </b>${singleData.types.map(type => type.type.name).join(", ")}</p>
+            <p><b>Move: </b>${singleData.moves.map(move => move.move.name).slice(0, 4).join(", ")}</p>
+            <p><b>Stat: </b>${singleData.stats.map(stat => `${stat.stat.name}: ${stat.base_stat}`).slice(0, 3).join(", ")}</p>
         </div>
         `
     }).join(" ");
     cardContainer.innerHTML += names;
-    offsetLimit += 18;
+    offsetLimit += 5;
 }
 
 function displayError(error) {
