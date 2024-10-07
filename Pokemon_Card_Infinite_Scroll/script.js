@@ -35,14 +35,15 @@ function throttle(cb, delay = 1000) {
     }
 };
 
+const throttledGetData = throttle(getMoreData, 1000);
 
 // Load more data on scroll
-window.addEventListener("scroll", throttle(() => {
+window.addEventListener("scroll", () => {
     const { scrollHeight, scrollTop, clientHeight } = document.documentElement;
     if (scrollTop + clientHeight >= scrollHeight - 100 && !loading) {
-        getMoreData()
+       throttledGetData();
     }
-}),2000);// Adjust delay as necessary
+});// Adjust delay as necessary
 
 form.addEventListener("submit", (e) => {
     e.preventDefault();
